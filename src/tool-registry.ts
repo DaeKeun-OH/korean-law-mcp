@@ -673,13 +673,13 @@ export const allTools: McpTool[] = [
   // === 통합 도구 (v3) ===
   {
     name: "search_decisions",
-    description: "[통합검색] 17개 도메인(판례·해석례·헌재·행심·조세심판·관세·공정위·개인정보위·노동위·권익위·소청심사·학칙·공사공단·공공기관·조약·영문법령) 통합 검색. domain으로 선택",
+    description: "[통합검색] 18개 도메인(판례·해석례·헌재·행심·조세심판·관세·국세청·공정위·개인정보위·노동위·권익위·소청심사·학칙·공사공단·공공기관·조약·영문법령) 통합 검색. domain으로 선택. 세무 관련 국세청 직접 회신 해석은 domain='nts'.",
     schema: SearchDecisionsSchema,
     handler: searchDecisions
   },
   {
     name: "get_decision_text",
-    description: "[통합조회] 17개 도메인 전문 조회. domain+id. full=false(기본) 시 본문 계단식 축약",
+    description: "[통합조회] 18개 도메인 전문 조회. domain+id. full=false(기본) 시 본문 계단식 축약",
     schema: GetDecisionTextSchema,
     handler: getDecisionText
   },

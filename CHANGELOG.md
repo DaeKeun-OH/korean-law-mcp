@@ -1,5 +1,26 @@
 # Changelog
 
+## [4.0.1] - 2026-05-08
+
+### Added (issue #35: 국세청 직접 회신 해석례 검색 미지원)
+
+기존 `search_interpretations`는 법제처 정부유권해석(`target=expc`)만 조회하므로, 국세청이 직접 회신한 법령해석을 가져올 수단이 없었음. 키워드 매칭으로 국세청 관련 안건이 노출은 되지만 모두 `해석기관=법제처`라 사용자가 누락 사실조차 인지하기 어려웠던 문제.
+
+- **`search_decisions`/`get_decision_text` 통합 도구의 `domain` enum에 `"nts"` 추가** — 법제처 API target `ntsCgmExpc`(국세청 법령해석 목록) 호출. 신규 노출 도구 0개.
+- **응답 구조가 관세청(`kcsCgmExpc`)과 동일**해서 `customs-interpretations.ts`에서 `searchCgmExpcByTarget(target)` 헬퍼로 분기, `searchNtsInterpretations`/`getNtsInterpretationText` 두 entry만 추가.
+- **본문 조회는 의도적으로 미구현** — 법제처 OPEN API가 국세청은 **목록 조회만 제공**하고 `lawService.do?target=ntsCgmExpc` 본문 endpoint를 제공하지 않음. `getNtsInterpretationText`는 `[NOT_SUPPORTED]` 안내 + 검색 단계의 `법령해석상세링크`(taxlaw.nts.go.kr) 외부 이동 안내만 반환 (LLM 환각 방지).
+- **자연어 라우팅 패턴 추가** ([query-router.ts](src/lib/query-router.ts)):
+  - `"국세청 양도소득세 해석"`, `"국세청 예규"`, `"법인세 예규 질의"` 등 → `search_decisions(domain=nts)`
+  - 패턴: `/국세청\s*(?:법령\s*)?해석/`, `/(?:양도|소득|법인|부가가치|상속|증여|종합부동산)세\s*(?:해석|예규|질의)/`
+- **검증**: `domain=nts`, `query="1세대 1주택 양도소득세"` 호출 시 812건 정상 매칭, 모두 `해석기관=국세청`. 1985~2020년대 국세청 직접 회신 해석례.
+
+### Files
+- 수정: [src/tools/customs-interpretations.ts](src/tools/customs-interpretations.ts) (target 분기 헬퍼 + nts 함수 2개), [src/tools/unified-decisions.ts](src/tools/unified-decisions.ts) (DOMAINS/LABELS/HANDLERS에 nts 추가), [src/lib/query-router.ts](src/lib/query-router.ts) (nts 자연어 패턴), [src/tool-registry.ts](src/tool-registry.ts) (search_decisions 설명 17→18 도메인)
+- 신규 파일: 없음
+
+### Design Note
+v4.0의 "신규 도구 최소화, 기존 시스템 재활용" 원칙 유지. 신규 노출 도구 0개로 LLM 도구 선택 혼란 없음. V3_EXPOSED는 그대로 17개.
+
 ## [4.0.0] - 2026-05-07
 
 ### Added (3개 킬러 기능 한꺼번에 — 도구 추가는 1개로 최소화, 기존 시나리오 시스템 재활용)

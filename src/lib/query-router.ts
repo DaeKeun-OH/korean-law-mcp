@@ -424,6 +424,31 @@ const routePatterns: Pattern[] = [
     priority: 9,
   },
 
+  // ── 19-1. 국세청 법령해석 (#35) ──
+  // search_decisions의 nts 도메인으로 라우팅 — 신규 노출 도구 없이 통합 도구 경유
+  // priority=3: admin_rule(4, '예규' 키워드 매칭)보다 우선 — 국세청/세목 키워드 동반 시 nts 우선
+  {
+    name: "nts_interpretation",
+    patterns: [
+      /국세청\s*(?:법령\s*)?해석|국세청\s*(?:해석|질의|회신|예규)/,
+      // "국세청 + 세목" 단독 패턴 (예: "국세청 양도세", "국세청 부가세")
+      /국세청\s+(?:양도|소득|법인|부가가치|부가|상속|증여|종합부동산|취득|재산|지방|양도소득)세/,
+      // 세목 + 해석/예규/질의 (양도세/부가세 같은 약칭 포함)
+      /(?:양도소득|양도|소득|법인|부가가치|부가|상속|증여|종합부동산|취득|재산|지방)세\s*(?:해석|예규|질의|회신)/,
+      /예규\s*(?:국세|소득세|법인세|부가세|양도소득세|양도세|상속세|증여세)/,
+    ],
+    tool: "search_decisions",
+    extract: (query) => {
+      const cleaned = query
+        .replace(/국세청|법령해석|해석례?|질의|회신|예규/g, "")
+        .replace(/\s+/g, " ")
+        .trim()
+      return { domain: "nts", query: cleaned || query }
+    },
+    reason: "국세청 해석 키워드 → search_decisions(domain=nts) — 국세청 직접 회신 해석례",
+    priority: 3,
+  },
+
   // ── 20. 공정위 결정문 ──
   {
     name: "ftc",
