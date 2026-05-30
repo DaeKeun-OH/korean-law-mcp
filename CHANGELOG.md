@@ -1,5 +1,18 @@
 # Changelog
 
+## [4.0.9] - 2026-05-31
+
+### Fixed — 법제처 API `Referer` 헤더 누락으로 인한 "사용자 정보 검증 실패" / 전 검색 실패 (외부 PR #45)
+
+법제처 OPEN API는 요청에 **`Referer` 헤더가 없으면 OC 키가 유효해도** "사용자 정보 검증에 실패하였습니다(정확한 서버장비의 IP주소 및 도메인주소를 등록해 주세요)" XML을 반환한다(헤더 격리 테스트로 입증, 동일 키·동일 IP 기준 Referer 유무만으로 갈림). 메시지가 IP 화이트리스트 문제로 오인되기 쉬우나 **실제 원인은 Referer 누락**.
+
+- v4.0.8의 빈/HTML 재시도는 증상(`missing root element`)을 완화했을 뿐, 근본 원인은 이 Referer 누락이었음. fly 서버에서 재현 확인: Referer 없으면 `ECONNRESET`/검증실패, `Referer: https://www.law.go.kr/` 추가 시 정상 응답. 법제처가 최근(2026-05) 이 검증을 강화한 것으로 보임.
+- **`fetch-with-retry.ts`**: 요청 호스트가 `law.go.kr` 계열일 때만 기본 `Referer` 주입(`isLawGoKrHost`). 호출자가 이미 지정했거나 다른 호스트(국세청 `taxlaw.nts.go.kr` 등)는 미주입. `LAW_REFERER` 환경변수로 override 가능.
+
+### 검증
+- `test/test-law-go-kr-referer.cjs`: 호스트 판별·기본 주입·호출자 보존·override·서브도메인 통과.
+- `npm run build` + v4.0.8 빈/HTML 재시도 회귀 테스트 통과.
+
 ## [4.0.8] - 2026-05-29
 
 ### Fixed — 법제처 빈/HTML 응답으로 인한 `missing root element` 간헐 실패
